@@ -1,3 +1,8 @@
+:root {
+	--app-width-max: 30rem;
+	--app-width: min(100vw, var(--app-width-max));
+}
+
 body {
 	margin: 0;
 	padding: 0;

@@ -1,48 +1,26 @@
 <script lang="ts">
     import {Sudoku} from "./sudoku/Sudoku";
+    import SudokuView from "./components/Sudoku.svelte";
 
     let sudoku: Sudoku = new Sudoku();
-    $: sudokuMap = sudoku.asFlatMap();
 </script>
 
 <main>
-    <div class="sudoku">
-        {#each sudokuMap as content, cell (cell)}
-            <div class="cell" class:cell--field-even={sudoku.getFieldStartCell(cell) % 2 === 0}>{content}</div>
-        {/each}
-    </div>
+    <SudokuView sudoku={sudoku}/>
 </main>
 
 <style>
     main {
-        width: 100vw;
+        width: var(--app-width);
         height: 100vh;
 
-        padding: 2rem;
+        margin: 0 auto;
+
+        padding: 1rem;
 
         display: flex;
-        justify-content: center;
-        align-items: flex-start;
-    }
-
-    .sudoku {
-        display: grid;
-        grid-template-columns: repeat(9, 2rem);
-        grid-template-rows: repeat(9, 2rem);
-        border: 1px solid #4A5568;
-    }
-
-    .sudoku .cell {
-        display: flex;
-        align-content: center;
-        justify-content: center;
-        border: 1px solid #4A5568;
-        padding: .4rem;
-
-        background: #F7FAFC;
-    }
-
-    .sudoku .cell.cell--field-even {
-        background: #CBD5E0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
     }
 </style>
