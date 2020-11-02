@@ -4,7 +4,7 @@ export class Sudoku {
 
     constructor() {
         this.map = new Array(81).fill(0);
-        this.solve(0);
+        this.generate(40);
     }
 
     public asMatrix(): number[][] {
@@ -71,12 +71,14 @@ export class Sudoku {
             .filter(number => !field.includes(number));
     }
 
-    private solve(index: number) {
+    private solve(index: number, forbiddenIndex: number = undefined, forbiddenValue: number = undefined) {
         if (index >= 81) {
             return true;
         }
 
-        const possibleValues = this.getPossibleValues(index);
+        const possibleValues = this.getPossibleValues(index)
+            .filter(number => forbiddenIndex === undefined || number !== forbiddenValue);
+
         const original = this.map[index];
 
         // Fisher-Yates shuffle algo
@@ -94,12 +96,50 @@ export class Sudoku {
         for (const value of possibleValues) {
             this.map[index] = value;
 
-            if (this.solve(index + 1)) {
+            if (this.solve(index + 1, forbiddenIndex, forbiddenValue)) {
                 return true;
             }
         }
 
         this.map[index] = original;
         return false;
+    }
+
+    private generate(amountCellsToRemove: number) {
+        this.solve(0);
+
+        for (let amountToRemove = amountCellsToRemove; amountToRemove > 0; amountToRemove--) {
+            this.removeRandomCell();
+        }
+    }
+
+    private removeRandomCell() {
+        while (true) {
+            // Remove random cell
+            const cell = this.getRandomFullCell();
+            const value = this.removeCell(cell);
+
+            // Check if board still solvable
+            if (!this.solve(0, cell, value)) {
+                return;
+            }
+
+            // Reset map
+            this.map[cell] = value;
+        }
+    }
+
+    private getRandomFullCell() {
+        const cellsFull = Object.keys(this.map)
+            .map(cell => parseInt(cell))
+            .filter(cell => !!this.map[cell]);
+
+        return cellsFull[~~(Math.random() * cellsFull.length)];
+    }
+
+    private removeCell(index: number) {
+        const original = this.map[index];
+        this.map[index] = undefined;
+        return original;
     }
 }
