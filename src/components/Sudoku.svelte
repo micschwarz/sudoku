@@ -32,7 +32,6 @@
         justify-content: center;
         text-align: center;
         border: 1px solid #4A5568;
-        padding: .4rem;
 
         background: #F7FAFC;
     }
