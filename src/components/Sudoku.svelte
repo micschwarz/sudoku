@@ -2,12 +2,12 @@
     import type {Sudoku} from "../sudoku/Sudoku";
 
     export let sudoku: Sudoku;
-    $: sudokuMap = sudoku.asFlatMap();
+    $: sudokuMap = sudoku?.getMap().asArray() || [];
 </script>
 
 <div class="sudoku">
     {#each sudokuMap as content, cell (cell)}
-        <div class="cell" class:cell--field-even={sudoku.getFieldStartCell(cell) % 2 === 0}>{content || ""}</div>
+        <div class="cell" class:cell--field-even={sudoku.getMap().getFieldStartCell(cell) % 2 === 0}>{content || ""}</div>
     {/each}
 </div>
 

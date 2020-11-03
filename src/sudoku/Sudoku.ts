@@ -1,69 +1,42 @@
+import {Map} from "./Map";
+
+/**
+ * Sudoku gameboard.
+ */
 export class Sudoku {
+    /**
+     * Sudoku map.
+     * @private
+     */
+    private readonly map: Map = new Map();
 
-    private readonly map: number[];
-
+    /**
+     * Generates a valid sudoku board.
+     */
     constructor() {
-        this.map = new Array(81).fill(0);
         this.generate(40);
     }
 
-    public asMatrix(): number[][] {
-        const matrix = [];
-
-        for (let cell = 0; cell < 81; cell += 9) {
-            matrix.push(this.map.slice(cell, cell + 9));
-        }
-
-        return matrix;
-    }
-
-    public asFlatMap(): number[] {
+    /**
+     * Get sudoku map.
+     * @return Sudoku map.
+     */
+    public getMap(): Map {
         return this.map;
     }
 
-    private getRow(index: number): number[] {
-        const firstCellInRow = index - index % 9;
-        return this.map.slice(firstCellInRow, firstCellInRow + 9);
-    }
-
-    private getColumn(index: number): number[] {
-        const firstCell = index % 9;
-        const values: number[] = [];
-
-        for (let cell = firstCell; cell < 81; cell += 9) {
-            values.push(this.map[cell]);
-        }
-
-        return values;
-    }
-
-    public getFieldStartCell(index: number): number {
-        const column = index % 9;
-        const row = (index - column) / 9;
-
-        const fieldColumn = column - (column % 3);
-        const fieldRow = row - (row % 3);
-
-        return fieldRow * 9 + fieldColumn;
-    }
-
-    private getField(index: number): number[] {
-        const values: number[] = [];
-        const startCell = this.getFieldStartCell(index);
-
-        for (let row = startCell; row < index + 18; row += 9) {
-            values.push(...this.map.slice(row, row + 3));
-        }
-
-        return values;
-    }
-
-    private getPossibleValues(index: number): number[] {
+    /**
+     * Get possible values for cell.
+     * @param cell Index of cell to get possible values for.
+     * @return Possible Values for given cell.
+     * @private
+     */
+    private getPossibleValues(cell: number): number[] {
         const possibleValues = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-        const row = this.getRow(index);
-        const column = this.getColumn(index);
-        const field = this.getField(index);
+        const row = this.map.getRow(cell);
+        const column = this.map.getColumn(cell);
+        const field = this.map.getField(cell);
 
         return possibleValues
             .filter(number => !row.includes(number))
@@ -71,7 +44,15 @@ export class Sudoku {
             .filter(number => !field.includes(number));
     }
 
-    private solve(index: number, forbiddenIndex: number = undefined, forbiddenValue: number = undefined) {
+    /**
+     * Solve the sudoku.
+     * @param index Index of cell to start with.
+     * @param forbiddenIndex Index of cell that is not allowed to contain forbiddenValue.
+     * @param forbiddenValue Value that is forbidden to be used for a given cell.
+     * @return Whether the game is solvable or not.
+     * @private
+     */
+    private solve(index: number, forbiddenIndex: number = undefined, forbiddenValue: number = undefined): boolean {
         if (index >= 81) {
             return true;
         }
@@ -79,9 +60,9 @@ export class Sudoku {
         const possibleValues = this.getPossibleValues(index)
             .filter(number => forbiddenIndex === undefined || number !== forbiddenValue);
 
-        const original = this.map[index];
+        const original = this.map.get(index);
 
-        // Fisher-Yates shuffle algo
+        // Fisher-Yates shuffle algorithm
         for (let positionOriginal = possibleValues.length - 1; positionOriginal > 0; positionOriginal--) {
             const positionRandom = ~~(Math.random() * (positionOriginal + 1));
             [
@@ -94,18 +75,23 @@ export class Sudoku {
         }
 
         for (const value of possibleValues) {
-            this.map[index] = value;
+            this.map.set(index, value);
 
             if (this.solve(index + 1, forbiddenIndex, forbiddenValue)) {
                 return true;
             }
         }
 
-        this.map[index] = original;
+        this.map.set(index, original);
         return false;
     }
 
-    private generate(amountCellsToRemove: number) {
+    /**
+     * Generate sudoku board.
+     * @param amountCellsToRemove Amount of cells to be empty.
+     * @private
+     */
+    private generate(amountCellsToRemove: number): void {
         this.solve(0);
 
         for (let amountToRemove = amountCellsToRemove; amountToRemove > 0; amountToRemove--) {
@@ -113,11 +99,16 @@ export class Sudoku {
         }
     }
 
-    private removeRandomCell() {
+    /**
+     * Removes a random cell from the board.
+     * Keeps the board solvable.
+     * @private
+     */
+    private removeRandomCell(): void {
         while (true) {
             // Remove random cell
-            const cell = this.getRandomFullCell();
-            const value = this.removeCell(cell);
+            const cell = this.map.getRandomFilledCellIndex();
+            const value = this.map.clear(cell);
 
             // Check if board still solvable
             if (!this.solve(0, cell, value)) {
@@ -125,21 +116,7 @@ export class Sudoku {
             }
 
             // Reset map
-            this.map[cell] = value;
+            this.map.set(cell, value);
         }
-    }
-
-    private getRandomFullCell() {
-        const cellsFull = Object.keys(this.map)
-            .map(cell => parseInt(cell))
-            .filter(cell => !!this.map[cell]);
-
-        return cellsFull[~~(Math.random() * cellsFull.length)];
-    }
-
-    private removeCell(index: number) {
-        const original = this.map[index];
-        this.map[index] = undefined;
-        return original;
     }
 }
